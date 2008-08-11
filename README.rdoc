@@ -1,0 +1,71 @@
+= Selfish
+
+Author::    Keita Yamaguchi(山口 慶太) <keita.yamaguchi@gmail.com>
+Copyright:: © Keita Yamaguchi, 2008. All rights reserved.
+License::   Ruby License
+
+Selfish introduces a prototipical object environment based on Self into Ruby.
+
+== Usage
+
+Selfish is influenced by Self and similar to it very mush.
+
+=== Selfish object
+
+==== empty object
+
+  Self: ()
+  Selfish: _()
+
+==== data slot "x" with 1
+
+  Self: (|x <- 1|)
+  Selfish: _(:x => 1)
+
+==== object with parent slot "parent"
+
+  Self: (|parent* <- ()|)
+  Selfish: _(:_parent => _())
+
+=== method
+
+==== unary method
+
+  Self: (|x <- 1. call = (x)|) call
+  Selfish: _(:x => 1, :call => proc {|s| s.x}).call
+
+==== with arguments
+
+  Self: (|next: = (|:x| x + 1)|) next: 1
+  Selfish: _(:next => proc {|s, x| x + 1}).next 1
+
+=== Slot
+
+==== slot read
+
+  Self: (|x <- 1|) x
+  Selfish: _(:x => 1).x
+
+==== slot write
+
+  Self: (|x <- 1|) x: 2
+  Selfish: _(:x => 1).x = 2
+
+=== Delegation
+
+==== inheritance
+
+  Self: (|parent* <- (|sum = (x + y)|). x <- 1. y <- 1|) sum
+  Selfish: _(:_parent => _(:sum => proc {|s| s.x + s.y}), :x => 1, :y => 2).sum
+
+==== multiple inheritance
+
+  Self: (| parent1* <- (|a = (1)|). parent2* <- (|b = (2)|) |)
+  Selfish: _( :_parent1 => _(:a => proc {1}), :_parent2 => _(:b => proc {2}))
+
+== Links
+
+* Selfish
+  * {GitHub}[http://github.com/keita/selfish/tree/master]
+* Author's blog(written in Japanese)
+  * {¬¬日常日記}[http://d.hatena.ne.jp/keita_yamaguchi/]
