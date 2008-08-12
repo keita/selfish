@@ -26,9 +26,14 @@ module Selfish
         visited << self
         if @slots.has_key?(selector)
           if @slots[selector].kind_of?(Proc)
-            [ @slots[selector] ] # method slot
+            cont = @slots[selector].call(nil)
+            if cont.kind_of?(Proc) then
+              [ cont ] # method slot
+            else
+              [ @slots[selector] ] # data slot
+            end
           else
-            [ proc{ slots[selector] } ] # data slot
+            [ proc{ slots[selector] } ] # Literal
           end
         else
           parent_lookup(selector, visited)
@@ -50,21 +55,27 @@ module Selfish
   end
 
   module SlotInterface
+    UNDEF_VALUE = [:undef]
     attr_reader :slots
 
     # Adds new slot.
     def add_slot(name, val=nil)
-      # data slot
-      @slots[name.to_sym] = val
-      # slot writer
-      @slots[:"#{name}="] = proc {|s, val| s.slots[name] = val }
+      # data reader/writer
+      @slots[name.to_sym] = ->(s, v = UNDEF_VALUE) {
+        if v == UNDEF_VALUE then
+          val
+        else
+          s.slots[name] = v
+          s
+        end
+      }
     end
 
     # Returns parents.
     def parents
       @slots.keys.select{|name|
         name.to_s =~ /\A_.*[^=]\Z/
-      }.map{|name| @slots[name]}
+      }.map{|name| @slots[name].call(nil)}
     end
   end
 
