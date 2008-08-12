@@ -14,9 +14,9 @@ describe "Selfish::Object" do
 
   it 'should write to slots' do
     obj = _(:x => 1, :y => 'a')
-    obj.x = 2
+    obj.x 2
     obj.x.should == 2
-    obj.y = 'b'
+    obj.y 'b'
     obj.y.should == 'b'
   end
 
