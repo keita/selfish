@@ -29,13 +29,13 @@ describe "Selfish::Object" do
   end
 
   it 'should call a method' do
-    obj = _(:x => 1, :next => proc {|s| s.x + 1})
+    obj = _(:x => 1, :next => method { x + 1 })
     obj.x.should == 1
     obj.next.should == 2
   end
 
   it 'should inherit parent' do
-    parent = _(:x => 1, :y => 2, :sum => proc {|s| s.x + s.y })
+    parent = _(:x => 1, :y => 2, :sum => method { x + y })
     parent.sum.should == 3
     child = _(:x => 2, :y => 3, :_parent => parent)
     child.sum.should == 5
@@ -58,8 +58,8 @@ describe "Selfish::Object" do
   end
 
   it 'should enable to inherit multiple parents' do
-    parent1 = _(:sum => proc{|s| s.x + s.y})
-    parent2 = _(:subtract => proc{|s| s.x - s.y})
+    parent1 = _(:sum => method { x + y })
+    parent2 = _(:subtract => method { x - y })
     child = _(:x => 1, :y => 2, :_a => parent1, :_b => parent2)
     child.sum.should == 3
     child.subtract.should == -1

@@ -25,15 +25,10 @@ module Selfish
       else
         visited << self
         if @slots.has_key?(selector)
-          if @slots[selector].kind_of?(Proc)
-            cont = @slots[selector].call(nil)
-            if cont.kind_of?(Proc) then
-              [ cont ] # method slot
-            else
-              [ @slots[selector] ] # data slot
-            end
+          if @slots[selector].kind_of?(MethodObject)
+            [ @slots[selector] ]
           else
-            [ proc{ slots[selector] } ] # Literal
+            [ proc { @slots[selector] } ]
           end
         else
           parent_lookup(selector, visited)
@@ -48,39 +43,40 @@ module Selfish
     def send(name, args)
       slots = lookup(name, [])
       case slots.size
-      when 0; raise SlotNotFound, name
+      when 0; raise SlotNotFound.new(name)
       when 1; slots.first.call(self, *args)
       else  ; raise ManySlotsFound, name; end
     end
   end
 
   module SlotInterface
-    UNDEF_VALUE = [:undef]
-    attr_reader :slots
-
-    # Adds new slot.
+    # Adds new slot or updates.
     def add_slot(name, val=nil)
-      # data reader/writer
-      @slots[name.to_sym] = ->(s, v = UNDEF_VALUE) {
-        if v == UNDEF_VALUE then
-          val
+      @slots[name.to_sym] =
+        if val.kind_of?(MethodObject) then val
         else
-          s.slots[name] = v
-          s
+          # data accessor
+          method(:x) { x ? (_self.add_slot(name, x); _self) : val }
         end
-      }
     end
 
     # Returns parents.
     def parents
       @slots.keys.select{|name|
         name.to_s =~ /\A_.*[^=]\Z/
-      }.map{|name| @slots[name].call(nil)}
+      }.map{|name| @slots[name].call(self) }
     end
   end
 
-  class SlotNotFound < StandardError; end
-  class ManySlotsFound < StandardError; end
+  class SlotError < StandardError
+    def initialize(name)
+      @name = name
+    end
+    def message; "slot: #{@name}"; end
+  end
+
+  class SlotNotFound < SlotError; end
+  class ManySlotsFound < SlotError; end
 
   class Object
     include Delegation
@@ -98,6 +94,29 @@ module Selfish
       send(name, args)
     end
   end
+
+  # MethodObject is the class for method slot.
+  # It's slot "self" is the reciever and delegates other methods.
+  class MethodObject < Object
+    undef_method :add_slot
+
+    def initialize(*keywords, &block)
+      super({})
+      @keywords = keywords
+      @block = block
+    end
+
+    def call(reciever, *args)
+      # set self
+      @slots[:_self] = method { reciever }
+      # set arguments
+      0.upto(@keywords.size-1) do |idx|
+        @slots[@keywords[idx]] = args[idx]
+      end
+      # eval
+      instance_eval(&@block)
+    end
+  end
 end
 
 module Kernel
@@ -105,6 +124,10 @@ module Kernel
   def _(slots={})
     ::Selfish::Object.new(slots)
   end
+
+  def method(*keys, &block)
+    ::Selfish::MethodObject.new(*keys, &block)
+  end
 end
 
-require "selfish/core"
+#require "selfish/core"
