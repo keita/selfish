@@ -32,12 +32,12 @@ Selfish is influenced by Self and similar to it very mush.
 ==== unary method
 
   Self: (|x <- 1. call = (x)|) call
-  Selfish: _(:x => 1, :call => proc {|s| s.x}).call
+  Selfish: _(:x => 1, :call => method { x }).call
 
 ==== with arguments
 
   Self: (|next: = (|:x| x + 1)|) next: 1
-  Selfish: _(:next => proc {|s, x| x + 1}).next 1
+  Selfish: _(:next => method(:x) { x + 1 }).next 1
 
 === Slot
 
@@ -49,19 +49,19 @@ Selfish is influenced by Self and similar to it very mush.
 ==== slot write
 
   Self: (|x <- 1|) x: 2
-  Selfish: _(:x => 1).x = 2
+  Selfish: _(:x => 1).x 2
 
 === Delegation
 
 ==== inheritance
 
   Self: (|parent* <- (|sum = (x + y)|). x <- 1. y <- 1|) sum
-  Selfish: _(:_parent => _(:sum => proc {|s| s.x + s.y}), :x => 1, :y => 2).sum
+  Selfish: _(:_parent => _(:sum => method { x + y }), :x => 1, :y => 2).sum
 
 ==== multiple inheritance
 
-  Self: (| parent1* <- (|a = (1)|). parent2* <- (|b = (2)|) |)
-  Selfish: _( :_parent1 => _(:a => proc {1}), :_parent2 => _(:b => proc {2}))
+  Self: (| p1* <- (|a = (1)|). p2* <- (|b = (2)|) |)
+  Selfish: _( :_p1 => _(:a => method {1}), :_p2 => _(:b => method {2}))
 
 == Links
 
