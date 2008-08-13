@@ -129,5 +129,3 @@ module Kernel
     ::Selfish::MethodObject.new(*keys, &block)
   end
 end
-
-#require "selfish/core"
