@@ -34,6 +34,12 @@ describe "Selfish::Object" do
     obj.next.should == 2
   end
 
+  it 'should call setter in method' do
+    obj = _(:x => 1, :next => method { x (x + 1) })
+    obj.x.should == 1
+    obj.next.x.should == 2
+  end
+
   it 'should inherit parent' do
     parent = _(:x => 1, :y => 2, :sum => method { x + y })
     parent.sum.should == 3

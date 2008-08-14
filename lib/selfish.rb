@@ -108,7 +108,9 @@ module Selfish
 
     def call(reciever, *args)
       # set self
-      @slots[:_self] = method { reciever }
+      @slots[:_self] = method {
+        reciever.kind_of?(MethodObject) ? reciever._self : reciever
+      }
       # set arguments
       0.upto(@keywords.size-1) do |idx|
         @slots[@keywords[idx]] = args[idx]
