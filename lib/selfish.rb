@@ -4,6 +4,12 @@ module Selfish
     def add_slots(slots)
       slots.each {|k,v| add_slot(k, v) }
     end
+
+    def clone
+      obj = _()
+      @slots.each {|k,v| obj.add_slot(k, v) }
+      return obj
+    end
   end
 
   # Delegation represents the inheritance mechaism for Selfish objects.
