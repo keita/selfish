@@ -14,9 +14,9 @@ describe "Selfish::Object" do
 
   it 'should write to slots' do
     obj = _(:x => 1, :y => 'a')
-    obj.x 2
+    obj.x! 2
     obj.x.should == 2
-    obj.y 'b'
+    obj.y! 'b'
     obj.y.should == 'b'
   end
 
@@ -28,6 +28,12 @@ describe "Selfish::Object" do
     obj.y.should == 1
   end
 
+  it 'should make setter' do
+    proc { _(:set! => method(:x) { x }) }.should.not.raise
+    proc { _(:set! => method { 1 }) }.should.raise ArgumentError
+    proc { _(:set! => 1) }.should.raise ArgumentError
+  end
+
   it 'should call a method' do
     obj = _(:x => 1, :next => method { x + 1 })
     obj.x.should == 1
@@ -35,7 +41,7 @@ describe "Selfish::Object" do
   end
 
   it 'should call setter in method' do
-    obj = _(:x => 1, :next => method { x (x + 1) })
+    obj = _(:x => 1, :next => method { x! (x + 1) })
     obj.x.should == 1
     obj.next.x.should == 2
   end
@@ -58,9 +64,7 @@ describe "Selfish::Object" do
     parent2 = _()
     parent3 = _()
     child = _(:_parent1 => parent1, :_parent2 => parent2, :_parent3 => parent3)
-    child.parents.should.include parent1
-    child.parents.should.include parent2
-    child.parents.should.include parent3
+    child.parents.should == [parent1, parent2, parent3]
   end
 
   it 'should enable to inherit multiple parents' do

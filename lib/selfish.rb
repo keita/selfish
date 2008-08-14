@@ -49,36 +49,50 @@ module Selfish
     def send(name, args)
       slots = lookup(name, [])
       case slots.size
-      when 0; raise SlotNotFound.new(name)
+      when 0; raise SlotNotFound.new(self, name)
       when 1; slots.first.call(self, *args)
-      else  ; raise ManySlotsFound, name; end
+      else  ; raise ManySlotsFound.new(self, name); end
     end
   end
 
   module SlotInterface
     # Adds new slot or updates.
     def add_slot(name, val=nil)
-      @slots[name.to_sym] =
-        if val.kind_of?(MethodObject) then val
-        else
-          # data accessor
-          method(:x) { x ? (_self.add_slot(name, x); _self) : val }
+      # slots with postfix "!" should be setter methods
+      if name.to_s =~ /!\Z/
+        unless val.kind_of?(MethodObject) and val.arity != 0
+          raise ArgumentError
         end
+      end
+
+      # set the slot
+      @slots[name.to_sym] = val
+
+      # data writer
+      unless val.kind_of?(MethodObject)
+        add_slot("#{name}!".to_sym, method(:x) {
+                   (_self.add_slot(name, x); _self)
+                 })
+      end
     end
 
     # Returns parents.
     def parents
       @slots.keys.select{|name|
-        name.to_s =~ /\A_.*[^=]\Z/
-      }.map{|name| @slots[name].call(self) }
+        name.to_s =~ /\A_.*[^!]\Z/
+      }.map{|name| @slots[name] }
     end
   end
 
   class SlotError < StandardError
-    def initialize(name)
-      @name = name
+    def initialize(reciever, slot_name)
+      @reciever = reciever
+      @slot_name = slot_name
     end
-    def message; "slot: #{@name}"; end
+
+    def message
+      "reciever:#{@reciever.inspect} slot_name: #{@slot_name}"
+    end
   end
 
   class SlotNotFound < SlotError; end
@@ -112,11 +126,16 @@ module Selfish
       @block = block
     end
 
+    # Returns the number of arity.
+    def arity
+      @keywords.size
+    end
+
     def call(reciever, *args)
       # set self
-      @slots[:_self] = method {
+      @slots[:_self] =
         reciever.kind_of?(MethodObject) ? reciever._self : reciever
-      }
+
       # set arguments
       0.upto(@keywords.size-1) do |idx|
         @slots[@keywords[idx]] = args[idx]
