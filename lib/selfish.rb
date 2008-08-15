@@ -137,11 +137,33 @@ module Selfish
         reciever.kind_of?(MethodObject) ? reciever._self : reciever
 
       # set arguments
+      @args = args
       0.upto(@keywords.size-1) do |idx|
         @slots[@keywords[idx]] = args[idx]
       end
       # eval
       instance_eval(&@block)
+    end
+  end
+
+  class BlockMethod < MethodObject
+    def initialize(parent, *keys, &block)
+      super(*keys, &block)
+      @slots[:_parent] = parent
+    end
+
+    def call(*args)
+      super(nil, *args)
+    end
+  end
+
+  class BlockObject < Object
+    def initialize(s, *keys, &block)
+      super(:lexical_parent => s)
+      block_method = BlockMethod.new(s, *keys, &block)
+
+      # method "value"
+      add_slot(:value, method { block_method.call(*@args) })
     end
   end
 end
@@ -154,5 +176,9 @@ module Kernel
 
   def method(*keys, &block)
     ::Selfish::MethodObject.new(*keys, &block)
+  end
+
+  def block(*keys, &block)
+    ::Selfish::BlockObject.new(self, *keys, &block)
   end
 end
