@@ -10,6 +10,10 @@ module Selfish
       slots.each {|k,v| obj.add_slot(k, v) }
       return obj
     end
+
+    def value
+      self
+    end
   end
 
   # Delegation represents the inheritance mechaism for Selfish objects.
@@ -165,6 +169,8 @@ module Selfish
   end
 
   class BlockObject < Object
+    undef_method :value
+
     def initialize(parent, *keys, &block)
       super(:lexical_parent => parent)
       block_method = BlockMethod.new(parent, *keys, &block)
