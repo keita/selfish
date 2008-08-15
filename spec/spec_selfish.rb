@@ -82,3 +82,16 @@ describe "Selfish::Object" do
     proc { child.x }.should.raise Selfish::ManySlotsFound
   end
 end
+
+describe "Selfish::BlockObject" do
+  it 'should create blocks' do
+    block { 1 + 1 }.should.kind_of Selfish::BlockObject
+    proc{ block(:x) { x + 1 } }.should.not.raise
+  end
+
+  it 'should interpret arguments' do
+    _(:result => method {
+        (block(:x) { x + 1 }).value(10)
+      }).result.should == 11
+  end
+end
