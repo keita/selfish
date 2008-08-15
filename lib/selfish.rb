@@ -93,6 +93,12 @@ module Selfish
     end
   end
 
+  module ObjectInterface
+    include Delegation
+    include SlotInterface
+    include Primitives
+  end
+
   class SlotError < StandardError
     def initialize(reciever, slot_name)
       @reciever = reciever
@@ -108,9 +114,7 @@ module Selfish
   class ManySlotsFound < SlotError; end
 
   class Object
-    include Delegation
-    include SlotInterface
-    include Primitives
+    include ObjectInterface
 
     def initialize(slots = {})
       @slots = {}
@@ -161,9 +165,9 @@ module Selfish
   end
 
   class BlockObject < Object
-    def initialize(s, *keys, &block)
-      super(:lexical_parent => s)
-      block_method = BlockMethod.new(s, *keys, &block)
+    def initialize(parent, *keys, &block)
+      super(:lexical_parent => parent)
+      block_method = BlockMethod.new(parent, *keys, &block)
 
       # method "value"
       add_slot(:value, method { block_method.call(*@args) })
