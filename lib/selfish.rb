@@ -7,7 +7,7 @@ module Selfish
 
     def clone
       obj = _()
-      @slots.each {|k,v| obj.add_slot(k, v) }
+      slots.each {|k,v| obj.add_slot(k, v) }
       return obj
     end
   end
@@ -30,11 +30,11 @@ module Selfish
       if visited.include?(self) then []
       else
         visited << self
-        if @slots.has_key?(selector)
-          if @slots[selector].kind_of?(MethodObject)
-            [ @slots[selector] ]
+        if slots.has_key?(selector)
+          if slots[selector].kind_of?(MethodObject)
+            [ slots[selector] ]
           else
-            [ proc { @slots[selector] } ]
+            [ proc { slots[selector] } ]
           end
         else
           parent_lookup(selector, visited)
@@ -47,15 +47,24 @@ module Selfish
     # Message send.
     # See Self reference manual 2.3.7.
     def send(name, args)
-      slots = lookup(name, [])
-      case slots.size
+      results = lookup(name, [])
+      case results.size
       when 0; raise SlotNotFound.new(self, name)
-      when 1; slots.first.call(self, *args)
+      when 1; results.first.call(self, *args)
       else  ; raise ManySlotsFound.new(self, name); end
+    end
+
+    def method_missing(name, *args)
+      send(name, args)
     end
   end
 
   module SlotInterface
+    # Returns slot table of the object.
+    def slots
+      @slots ||= {}
+    end
+
     # Adds new slot or updates.
     def add_slot(name, val=nil)
       # slots with postfix "!" should be setter methods
@@ -66,7 +75,7 @@ module Selfish
       end
 
       # set the slot
-      @slots[name.to_sym] = val
+      slots[name.to_sym] = val
 
       # data writer
       unless val.kind_of?(MethodObject)
@@ -78,7 +87,7 @@ module Selfish
 
     # Returns parents.
     def parents
-      @slots.keys.select{|name|
+      slots.keys.select{|name|
         name.to_s =~ /\A_.*[^!]\Z/
       }.map{|name| @slots[name] }
     end
@@ -106,12 +115,6 @@ module Selfish
     def initialize(slots = {})
       @slots = {}
       add_slots(slots)
-    end
-
-    private
-
-    def method_missing(name, *args)
-      send(name, args)
     end
   end
 
