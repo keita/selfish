@@ -1,5 +1,6 @@
 $:.unshift File.join(File.dirname(__FILE__), "..", "lib")
 require "selfish"
+require "selfish/core"
 
 describe "Selfish::Object" do
   it 'should read from slots' do
@@ -93,5 +94,9 @@ describe "Selfish::BlockObject" do
     _(:result => method {
         (block(:x) { x + 1 }).value(10)
       }).result.should == 11
+  end
+
+  it 'should delegate from method' do
+    _(:res => method { block { x }.value }, :x => 1).res.should == 1
   end
 end
