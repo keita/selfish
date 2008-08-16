@@ -92,7 +92,7 @@ module Selfish
     # Returns parents.
     def parents
       slots.keys.select{|name|
-        name.to_s =~ /\A_.*[^!]\Z/
+        name.to_s =~ /\A_[^_]*[^!]\Z/
       }.map{|name| @slots[name] }
     end
   end
@@ -129,31 +129,42 @@ module Selfish
   # MethodObject is the class for method slot.
   # It's slot "self" is the reciever and delegates other methods.
   class MethodObject < Object
-    undef_method :add_slot
-
-    def initialize(*keywords, &block)
+    def initialize(*keys, &block)
       super({})
-      @keywords = keywords
-      @block = block
+      @slots[:__keys__] = keys
+      @slots[:__code__] = block
+    end
+
+    def clone
+      return self.class.new(*__keys__, &__code__)
     end
 
     # Returns the number of arity.
     def arity
-      @keywords.size
+      __keys__.size
     end
 
     def call(reciever, *args)
-      # set self
-      @slots[:_self] =
-        reciever.kind_of?(MethodObject) ? reciever._self : reciever
+      clone.instance_eval do
+        # set self
+        slots[:_self] =
+          reciever.kind_of?(MethodObject) ? reciever._self : reciever
 
-      # set arguments
-      @args = args
-      0.upto(@keywords.size-1) do |idx|
-        @slots[@keywords[idx]] = args[idx]
+        eval_code(*args)
       end
+    end
+
+    private
+
+    def eval_code(*args)
+      # set arguments
+      @slots[:args_] = args
+      0.upto(arity - 1) do |idx|
+        @slots[__keys__[idx]] = args[idx]
+      end
+
       # eval
-      instance_eval(&@block)
+      instance_eval(&__code__)
     end
   end
 
@@ -163,8 +174,13 @@ module Selfish
       @slots[:_parent] = parent
     end
 
+    def clone
+      obj = super
+      obj.slots[:_parent] = _parent
+    end
+
     def call(*args)
-      super(nil, *args)
+      instance_eval { eval_code(*args) }
     end
   end
 
@@ -172,11 +188,17 @@ module Selfish
     undef_method :value
 
     def initialize(parent, *keys, &block)
-      super(:lexical_parent => parent)
       block_method = BlockMethod.new(parent, *keys, &block)
+      super(:lexical_parent => parent, :block_method => block_method)
 
       # method "value"
-      add_slot(:value, method { block_method.call(*@args) })
+      add_slot(:value, method { block_method.call(*args_) })
+    end
+
+    def clone
+      return BlockObject.new(slots[:lexical_parent],
+                             *slots[:block_method].__keys__,
+                             &slots[:block_method].slots[:__code__])
     end
   end
 end
