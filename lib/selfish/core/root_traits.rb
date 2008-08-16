@@ -2,9 +2,6 @@
 # This is Selfish version of objects/core/rootTraits.self.
 #
 
-# make initial objects
-Selfish.lobby.add_slots(:mixins => _(), :traits => _(), :_globals => _())
-
 Selfish.lobby do
   # mixins clonable
   mixins.add_slots(:clonable => _())
