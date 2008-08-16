@@ -76,11 +76,28 @@ describe "Selfish::Object" do
     child.subtract.should == -1
   end
 
-  it 'should raise an error when multiple ' do
+  it 'should raise an error when inherit multiplely' do
     parent1 = _(:x => 1)
     parent2 = _(:x => 2)
     child = _(:_parent1 => parent1, :_parent2 => parent2)
     proc { child.x }.should.raise Selfish::ManySlotsFound
+  end
+end
+
+describe "Selfish::MethodObject" do
+  it 'should know arity' do
+    method(:x, :y, :z){}.arity.should == 3
+  end
+
+  it 'should call recuirsively' do
+    _(:res => method(:n){
+        n > 0 ? res(n - 1) : "end"
+      }).res(10).should == "end"
+  end
+
+  it 'should clone' do
+    obj = method(:x){ x + 1 }.clone
+    obj.should.kind_of Selfish::MethodObject
   end
 end
 
@@ -98,5 +115,17 @@ describe "Selfish::BlockObject" do
 
   it 'should delegate from method' do
     _(:res => method { block { x }.value }, :x => 1).res.should == 1
+  end
+
+  it 'should call recuirsively' do
+    _(:res => method(:n) {
+        n > 0 ? block { res(n - 1) }.value : "end"
+      }).res(10).should == "end"
+  end
+
+  it 'should clone' do
+    obj = block(:x) { x + 1 }.clone
+    obj.should.kind_of Selfish::BlockObject
+    obj.value(2).should == 3
   end
 end
