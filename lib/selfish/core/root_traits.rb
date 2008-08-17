@@ -14,7 +14,13 @@ Selfish.lobby do
   mixins.add_slots(:oddball => _(:copy => method { _self }))
 
   # mixins ordered
-  mixins.add_slots(:ordered => _(:descendant_responsibilities => _()))
+  ordered = {
+    :descendant_responsibilities => _(),
+    :compare => method(:x, :lb, :eb, :gb) {
+      (_self == x).if_true(eb, block { (_self < x).if_true(lb, gb) })
+    }
+  }
+  mixins.add_slots(:ordered => _(ordered))
 
   # mixins unordered
   mixins.add_slots(:unordered => _(:descendant_responsibilities => _()))
