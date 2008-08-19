@@ -158,9 +158,17 @@ module Selfish
 
     def eval_code(*args)
       # set arguments
-      @slots[:args_] = args
-      0.upto(arity - 1) do |idx|
-        @slots[__keys__[idx]] = args[idx]
+      if __keys__[0].kind_of?(Hash)
+        # with keywords
+        __keys__[0].each do |k, v|
+          @slots[v] = args[0][k]
+        end
+      else
+        # without keywords
+        @slots[:args_] = args
+        0.upto(arity - 1) do |idx|
+          @slots[__keys__[idx]] = args[idx]
+        end
       end
 
       # eval

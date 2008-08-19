@@ -95,6 +95,12 @@ describe "Selfish::MethodObject" do
       }).res(10).should == "end"
   end
 
+  it 'should call with keywords' do
+    _(:m => method(:key_a => :a, :key_b => :b, :key_c => :c) {
+        a + b - c
+      }).m(:key_a => 1, :key_b => 2, :key_c => 3).should == 0
+  end
+
   it 'should clone' do
     obj = method(:x){ x + 1 }.clone
     obj.should.kind_of Selfish::MethodObject
