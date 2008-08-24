@@ -1,6 +1,6 @@
 # globals typeSizes
 
-:self_int.add_slot(:bit_size, 31)
+:selfish_int.add_slot(:bit_size, 31)
 
 type_sizes = {
   :bit_size => method(:type_name) { type_name.bit_size },

@@ -6,7 +6,7 @@ type_sizes = Selfish.lobby.type_sizes
 
 describe "globals.type_size" do
   it '#bit_size' do
-    type_sizes.bit_size(:self_int).should == 31
+    type_sizes.bit_size(:selfish_int).should == 31
   end
 
   it '#bits_per_byte' do
@@ -14,6 +14,6 @@ describe "globals.type_size" do
   end
 
   it '#byte_size' do
-    type_sizes.byte_size(:self_int).should == 4
+    type_sizes.byte_size(:selfish_int).should == 4
   end
 end
