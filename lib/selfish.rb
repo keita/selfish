@@ -149,6 +149,7 @@ module Selfish
         # set self
         slots[:_self] =
           reciever.kind_of?(MethodObject) ? reciever._self : reciever
+        slots[:__self__] = slots[:_self]
 
         eval_code(*args)
       end
