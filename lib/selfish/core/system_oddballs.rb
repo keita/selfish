@@ -1,3 +1,5 @@
+# globals typeSizes
+
 :self_int.add_slot(:bit_size, 31)
 
 type_sizes = {
