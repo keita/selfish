@@ -105,6 +105,10 @@ describe "Selfish::MethodObject" do
     obj = method(:x){ x + 1 }.clone
     obj.should.kind_of Selfish::MethodObject
   end
+
+  it 'should return' do
+    _(:m => method(:a){ __return__ a; 1 }).m(10).should == 10
+  end
 end
 
 describe "Selfish::BlockObject" do
@@ -133,5 +137,9 @@ describe "Selfish::BlockObject" do
     obj = block(:x) { x + 1 }.clone
     obj.should.kind_of Selfish::BlockObject
     obj.value(2).should == 3
+  end
+
+  it 'should return' do
+    _(:m => method(:a){ block{ __return__ a; 1 }.value; 1 }).m(10).should == 10
   end
 end

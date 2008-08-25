@@ -1,3 +1,5 @@
+require "continuation" if RUBY_VERSION[0..2] == "1.9"
+
 module Selfish
   # The module Primitives is a set of primitive methods.
   module Primitives
@@ -172,8 +174,15 @@ module Selfish
         end
       end
 
-      # eval
-      instance_eval(&__code__)
+      __eval__
+    end
+
+    # can catch "return"
+    def __eval__
+      ::Kernel.callcc do |c|
+        @slots[:__return__] = method{ c.call(*args_) }
+        instance_eval(&__code__)
+      end
     end
   end
 
@@ -190,6 +199,13 @@ module Selfish
 
     def call(*args)
       instance_eval { eval_code(*args) }
+    end
+
+    private
+
+    # cannot catch "__return__"
+    def __eval__
+      instance_eval(&__code__)
     end
   end
 
