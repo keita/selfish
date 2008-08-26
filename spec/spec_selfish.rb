@@ -101,6 +101,10 @@ describe "Selfish::MethodObject" do
       }).m(:key_a => 1, :key_b => 2, :key_c => 3).should == 0
   end
 
+  it 'should set writer if the value is nil' do
+    _(:m => method(:a){ a! 10; a }).m.should == 10
+  end
+
   it 'should clone' do
     obj = method(:x){ x + 1 }.clone
     obj.should.kind_of Selfish::MethodObject

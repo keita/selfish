@@ -112,7 +112,7 @@ module Selfish
     end
 
     def message
-      "reciever:#{@reciever.inspect} slot_name: #{@slot_name}"
+      "slot_name: #{@slot_name} reciever:#{@reciever.inspect}"
     end
   end
 
@@ -172,6 +172,14 @@ module Selfish
         0.upto(arity - 1) do |idx|
           @slots[__keys__[idx]] = args[idx]
         end
+      end
+
+      # set writer method if the slot value is nil
+      @slots.select{|k, v| v.nil? }.each do |k, v|
+        m = self
+        @slots[:"#{k}!"] = method(:x){
+          m.add_slot(k, x); __self__
+        } if @slots[k].nil?
       end
 
       __eval__
