@@ -86,7 +86,7 @@ module Selfish
       # data writer
       unless val.kind_of?(MethodObject)
         add_slot("#{name}!".to_sym, method(:x) {
-                   (_self.add_slot(name, x); _self)
+                   (__self__.add_slot(name, x); __self__)
                  })
       end
     end
@@ -94,7 +94,7 @@ module Selfish
     # Returns parents.
     def parents
       slots.keys.select{|name|
-        name.to_s =~ /\A_[^_]*[^!]\Z/
+        name == :__self__ || name.to_s =~ /\A_[^_]*[^!]\Z/
       }.map{|name| @slots[name] }
     end
   end
@@ -153,9 +153,8 @@ module Selfish
     def call(reciever, *args)
       clone.instance_eval do
         # set self
-        slots[:_self] =
-          reciever.kind_of?(MethodObject) ? reciever._self : reciever
-        slots[:__self__] = slots[:_self]
+        slots[:__self__] =
+          reciever.kind_of?(MethodObject) ? reciever.__self__ : reciever
 
         eval_code(*args)
       end
