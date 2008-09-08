@@ -126,6 +126,10 @@ module Selfish
       @slots = {}
       add_slots(slots)
     end
+
+    def inspect
+      "#<Obj SLOTS=[#{@slots.keys.join(", ")}]>"
+    end
   end
 
   # MethodObject is the class for method slot.
@@ -174,12 +178,12 @@ module Selfish
         end
       end
 
-      # set writer method if the slot value is nil
-      @slots.select{|k, v| v.nil? }.each do |k, v|
+      # set writer method
+      @slots.keys.select{|k| not(k =~ /!\Z|\A_.*/)}.each do |k|
         m = self
         @slots[:"#{k}!"] = method(:x){
           m.add_slot(k, x); __self__
-        } if @slots[k].nil?
+        }
       end
 
       __eval__
