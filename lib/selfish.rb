@@ -128,7 +128,7 @@ module Selfish
     end
 
     def inspect
-      "#<Obj SLOTS=[#{@slots.keys.join(", ")}]>"
+      "#<#{self.class} SLOTS=[#{@slots.keys.join(", ")}]>"
     end
   end
 
@@ -241,8 +241,12 @@ end
 
 module Kernel
   # Shortcut function for creating new object.
-  def _(slots={})
-    ::Selfish::Object.new(slots)
+  def _(slots={}, &block)
+    if block
+      ::Selfish::BlockObject.new(self, [], &block)
+    else
+      ::Selfish::Object.new(slots)
+    end
   end
 
   def method(*keys, &block)
